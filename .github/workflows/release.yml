@@ -1,0 +1,48 @@
+name: Python upguard-api release
+
+on:
+  push:
+    branches: [ "swaggerhub" ]
+  pull_request:
+    branches: [ "swaggerhub" ]
+  workflow_dispatch:  # click the button on Github repo!
+  
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    name: Build release wheel 
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10"]
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Install wheel
+      run: |
+         python -m pip install --upgrade setuptools pip
+         python -m pip install wheel six termcolor
+         if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+    - name: Run build wheels
+      run: pip wheel -w wheelhouse/ .
+      env:
+         PYTHON_VERSION: ${{ matrix.python-version }}
+
+    - name: Get current date
+      id: date
+      run: echo "date=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+
+    - uses: "marvinpinto/action-automatic-releases@latest"
+      with:
+         repo_token: "${{ secrets.GITHUB_TOKEN }}"
+         automatic_release_tag: "v${{ env.date }}"
+         prerelease: true
+         title: "Automatic Build ${{ env.date }}"
+         files: |
+           wheelhouse/*.whl
