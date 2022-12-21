@@ -45,4 +45,4 @@ jobs:
          prerelease: true
          title: "Automatic Build ${{ env.date }}"
          files: |
-           wheelhouse/*.whl
+           wheelhouse/upguard*.whl
